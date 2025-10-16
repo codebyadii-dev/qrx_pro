@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart' as _i583;
 import 'package:injectable/injectable.dart' as _i526;
 
 import '../services/database/database_service.dart' as _i247;
+import '../services/permissions/permission_service.dart' as _i202;
 import 'register_module.dart' as _i291;
 
 extension GetItInjectableX on _i174.GetIt {
@@ -32,6 +33,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i247.DatabaseService.create(),
       preResolve: true,
     );
+    gh.lazySingleton<_i202.PermissionService>(() => _i202.PermissionService());
     return this;
   }
 }
