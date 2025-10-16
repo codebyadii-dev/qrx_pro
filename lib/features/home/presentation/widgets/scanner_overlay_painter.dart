@@ -21,7 +21,8 @@ class ScannerOverlayPainter extends CustomPainter {
 
     // Creates a path that is the difference between the background and the cutout.
     // This results in a "hole" in the middle.
-    final backgroundPaint = Paint()..color = Colors.black.withOpacity(0.5);
+    final backgroundPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.5);
     final backgroundWithCutout = Path.combine(
       PathOperation.difference,
       backgroundPath,
