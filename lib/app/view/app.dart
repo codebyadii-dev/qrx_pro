@@ -1,5 +1,6 @@
 // lib/app/view/app.dart
 import 'package:flutter/material.dart';
+import 'package:qrx_pro/core/config/app_theme.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -9,30 +10,27 @@ class App extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'QRX Pro',
-
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        colorSchemeSeed: Colors.blue,
-      ),
+      // Connect our custom themes
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      // The theme mode will be managed by a Cubit in a later .
+      // For now, it will follow the system setting.
+      themeMode: ThemeMode.system,
       home: const MainScaffold(),
     );
   }
 }
 
-// A temporary placeholder widget for the home screen.
+// This temporary placeholder remains the same.
 class MainScaffold extends StatelessWidget {
   const MainScaffold({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('QRX Pro - Phase 1')),
+      appBar: AppBar(title: const Text('QRX Pro - Phase 2')),
       body: const Center(
-        child: Text(
-          'Project Structure Initialized!',
-          style: TextStyle(fontSize: 20),
-        ),
+        child: Text('Themes Initialized!', style: TextStyle(fontSize: 20)),
       ),
     );
   }
