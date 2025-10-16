@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qrx_pro/core/navigation/app_routes.dart';
 import 'package:qrx_pro/features/home/presentation/screens/home_screen.dart';
+import 'package:qrx_pro/features/scanner/presentation/screens/result_screen.dart';
+import 'package:qrx_pro/features/scanner/presentation/screens/scanner_screen.dart';
 
 class AppRouter {
   AppRouter._();
@@ -26,7 +28,7 @@ class AppRouter {
           // Scan Tab
           GoRoute(
             path: AppRoutes.scan,
-            builder: (context, state) => const ScanTab(),
+            builder: (context, state) => const ScannerScreen(),
           ),
           // History Tab
           GoRoute(
@@ -41,6 +43,14 @@ class AppRouter {
         ],
       ),
       // We can add other top-level routes here later (e.g., login, onboarding)
+      GoRoute(
+        path: '/scan/result', // Define a clear path
+        builder: (context, state) {
+          // Pass the scanned data to the screen using 'extra'
+          final String qrData = state.extra as String? ?? 'No data found';
+          return ResultScreen(qrData: qrData);
+        },
+      ),
     ],
   );
 }
