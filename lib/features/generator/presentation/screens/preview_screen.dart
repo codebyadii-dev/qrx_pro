@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -17,6 +20,19 @@ class _PreviewScreenState extends State<PreviewScreen> {
   Color _foregroundColor = Colors.black;
   Color _backgroundColor = Colors.white;
   QrEyeShape _eyeShape = QrEyeShape.square;
+  File? _logoImage;
+
+  // Method to pick an image from the gallery
+  Future<void> _pickLogoImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _logoImage = File(pickedFile.path);
+      });
+    }
+  }
 
   void _pickColor(bool isForeground) {
     showDialog(
@@ -75,6 +91,13 @@ class _PreviewScreenState extends State<PreviewScreen> {
                   color: _foregroundColor,
                 ),
                 dataModuleStyle: QrDataModuleStyle(color: _foregroundColor),
+                // ***  LOGO LOGIC***
+                embeddedImage: _logoImage != null
+                    ? FileImage(_logoImage!)
+                    : null,
+                embeddedImageStyle: const QrEmbeddedImageStyle(
+                  size: Size(50, 50),
+                ),
               ),
             ),
           ),
@@ -165,6 +188,27 @@ class _PreviewScreenState extends State<PreviewScreen> {
                       },
                     ),
                   ],
+                ),
+
+                const Divider(),
+                // ***  THE LOGO PICKER TILE ***
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(LucideIcons.imagePlus),
+                  title: const Text('Add Logo'),
+                  subtitle: Text(
+                    _logoImage == null ? 'No image selected' : 'Change image',
+                  ),
+                  trailing: _logoImage != null
+                      ? IconButton(
+                          icon: const Icon(
+                            LucideIcons.xCircle,
+                            color: Colors.red,
+                          ),
+                          onPressed: () => setState(() => _logoImage = null),
+                        )
+                      : null,
+                  onTap: _pickLogoImage,
                 ),
               ],
             ),
