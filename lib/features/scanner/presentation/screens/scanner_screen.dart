@@ -45,7 +45,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
     if (rawValue != null && rawValue.isNotEmpty) {
       setState(() => _isProcessing = true);
       _cameraController.stop();
-      context.go('/scan/result', extra: rawValue);
+      context.push('/scan/result', extra: rawValue);
     }
   }
 

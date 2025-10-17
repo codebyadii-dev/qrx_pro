@@ -1,46 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:qrx_pro/common/cubit/base_state.dart';
+import 'package:qrx_pro/core/di/service_locator.dart';
 import 'package:qrx_pro/features/history/domain/entities/history_item.dart';
+import 'package:qrx_pro/features/history/presentation/cubit/history_cubit.dart';
 import 'package:qrx_pro/features/history/presentation/widgets/history_list_item.dart';
 
-class HistoryScreen extends StatelessWidget {
+class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
-  //  mock data
-  final List<HistoryItem> _mockHistoryItems = const [];
+  @override
+  State<HistoryScreen> createState() => _HistoryScreenState();
+}
 
+class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('History'),
-        actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.search),
-            onPressed: () {
-              /* Future: Implement search */
-            },
-          ),
-          IconButton(
-            icon: const Icon(LucideIcons.trash2),
-            onPressed: () {
-              /* Future: Implement clear history */
-            },
-          ),
-        ],
+    return BlocProvider(
+      create: (context) => getIt<HistoryCubit>()..loadHistory(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('History'),
+          actions: [
+            IconButton(icon: const Icon(LucideIcons.search), onPressed: () {}),
+            IconButton(icon: const Icon(LucideIcons.trash2), onPressed: () {}),
+          ],
+        ),
+        body: BlocBuilder<HistoryCubit, BaseState<List<HistoryItem>>>(
+          builder: (context, state) {
+            return state.when(
+              initial: () => const SizedBox.shrink(),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              success: (items) =>
+                  items.isEmpty ? _buildEmptyState() : _buildHistoryList(items),
+              error: (message) => Center(child: Text('Error: $message')),
+            );
+          },
+        ),
       ),
-      body: _mockHistoryItems.isEmpty
-          ? _buildEmptyState()
-          : _buildHistoryList(),
     );
   }
 
-  Widget _buildHistoryList() {
+  Widget _buildHistoryList(List<HistoryItem> items) {
     return ListView.builder(
-      itemCount: _mockHistoryItems.length,
+      itemCount: items.length,
       itemBuilder: (context, index) {
-        // THE FIX IS HERE: Changed '_mock_history_items' to '_mockHistoryItems'
-        return HistoryListItem(item: _mockHistoryItems[index]);
+        return HistoryListItem(item: items[index]);
       },
     );
   }
@@ -62,7 +68,7 @@ class HistoryScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           const Text(
-            'Your scanned and generated codes will appear here.',
+            'Your saved items will appear here.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey),
           ),
