@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:qrx_pro/core/di/service_locator.dart';
+import 'package:qrx_pro/features/history/data/repositories/history_repository_impl.dart';
+import 'package:qrx_pro/features/history/domain/entities/history_item.dart';
 import 'package:qrx_pro/features/scanner/domain/entities/qr_data.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -16,6 +19,8 @@ class ResultScreen extends StatefulWidget {
 
 class _ResultScreenState extends State<ResultScreen> {
   late QrData _parsedData;
+  // Get an instance of the repository from our DI container
+  final IHistoryRepository _historyRepository = getIt<IHistoryRepository>();
 
   @override
   void initState() {
@@ -47,6 +52,16 @@ class _ResultScreenState extends State<ResultScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
     );
+  }
+
+  Future<void> _saveToHistory() async {
+    final historyItem = HistoryItem(
+      rawValue: _parsedData.rawValue,
+      timestamp: DateTime.now(),
+      type: _parsedData.type.name, // Use the enum's name as a string
+    );
+    await _historyRepository.saveHistoryItem(historyItem);
+    _showSnackbar('Saved to history!');
   }
 
   @override
@@ -129,11 +144,9 @@ class _ResultScreenState extends State<ResultScreen> {
           icon: const Icon(LucideIcons.share2),
           label: const Text('Share'),
         ),
-        // Placeholder for future feature
+
         FilledButton.tonalIcon(
-          onPressed: () {
-            // Logic for Phase 11
-          },
+          onPressed: _saveToHistory,
           icon: const Icon(LucideIcons.history),
           label: const Text('Save'),
         ),
