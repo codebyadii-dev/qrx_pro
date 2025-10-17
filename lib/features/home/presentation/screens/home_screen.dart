@@ -72,17 +72,6 @@ class HomeTab extends StatelessWidget {
   }
 }
 
-class HistoryTab extends StatelessWidget {
-  const HistoryTab({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('History')),
-      body: const Center(child: Text('History Screen')),
-    );
-  }
-}
-
 class SettingsTab extends StatelessWidget {
   const SettingsTab({super.key});
   @override

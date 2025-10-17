@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qrx_pro/core/navigation/app_routes.dart';
+import 'package:qrx_pro/features/history/presentation/screens/history_screen.dart';
 import 'package:qrx_pro/features/home/presentation/screens/home_screen.dart';
 import 'package:qrx_pro/features/scanner/presentation/screens/result_screen.dart';
 import 'package:qrx_pro/features/scanner/presentation/screens/scanner_screen.dart';
@@ -33,7 +34,7 @@ class AppRouter {
           // History Tab
           GoRoute(
             path: AppRoutes.history,
-            builder: (context, state) => const HistoryTab(),
+            builder: (context, state) => const HistoryScreen(),
           ),
           // Settings Tab
           GoRoute(
