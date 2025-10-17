@@ -50,6 +50,7 @@ dependencies:
   share_plus: ^9.0.0
   timeago: ^3.7.1
   qr_flutter: ^4.1.0
+  flutter_colorpicker: ^1.1.0
   
   
 

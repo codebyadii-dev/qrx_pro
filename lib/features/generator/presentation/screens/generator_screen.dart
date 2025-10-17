@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:qrx_pro/features/generator/domain/entities/qr_style_data.dart';
 
 class GeneratorScreen extends StatefulWidget {
   const GeneratorScreen({super.key});
@@ -11,11 +14,37 @@ class GeneratorScreen extends StatefulWidget {
 
 class _GeneratorScreenState extends State<GeneratorScreen> {
   final _textController = TextEditingController();
+  //  state variables for styling
+  Color _foregroundColor = Colors.black;
+  Color _backgroundColor = Colors.white;
+  QrEyeShape _eyeShape = QrEyeShape.square;
 
   @override
   void dispose() {
     _textController.dispose();
     super.dispose();
+  }
+
+  // Helper function to show the color picker dialog
+  void _pickColor(Function(Color) onColorChanged) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Pick a color'),
+        content: SingleChildScrollView(
+          child: ColorPicker(
+            pickerColor: _foregroundColor,
+            onColorChanged: onColorChanged,
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Done'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -28,6 +57,8 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
           _buildTextField(),
           const SizedBox(height: 24),
           _buildActionButtons(),
+          const SizedBox(height: 24),
+          _buildStylingOptions(), // Add the new section
           const SizedBox(height: 24),
           _buildTypeSelector(),
         ],
@@ -62,7 +93,17 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
               // ***  LOGIC ***
               final text = _textController.text.trim();
               if (text.isNotEmpty) {
-                context.push('/generator/preview', extra: text);
+                context.push(
+                  '/generator/preview',
+                  extra: {
+                    'data': text,
+                    'style': QrStyleData(
+                      foregroundColor: _foregroundColor,
+                      backgroundColor: _backgroundColor,
+                      eyeShape: _eyeShape,
+                    ),
+                  },
+                );
               } else {
                 // Show a snackbar if the input is empty
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -91,8 +132,83 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
     );
   }
 
+  //  WIDGET for styling options
+  Widget _buildStylingOptions() {
+    return Card(
+      child: ExpansionTile(
+        leading: const Icon(LucideIcons.palette),
+        title: const Text('Styling Options'),
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
+            child: Column(
+              children: [
+                _buildColorPickerTile('Foreground', _foregroundColor, (color) {
+                  setState(() => _foregroundColor = color);
+                }),
+                _buildColorPickerTile('Background', _backgroundColor, (color) {
+                  setState(() => _backgroundColor = color);
+                }),
+                _buildEyeShapeSelector(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  //  HELPER for color picker tiles
+  Widget _buildColorPickerTile(
+    String title,
+    Color color,
+    Function(Color) onColorChanged,
+  ) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(title),
+      trailing: CircleAvatar(backgroundColor: color, radius: 14),
+      onTap: () => _pickColor(onColorChanged),
+    );
+  }
+
+  //  WIDGET for eye shape selection
+  Widget _buildEyeShapeSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8.0),
+          child: Text('Eye Shape'),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            ChoiceChip(
+              label: const Text('Square'),
+              selected: _eyeShape == QrEyeShape.square,
+              onSelected: (selected) {
+                if (selected) setState(() => _eyeShape = QrEyeShape.square);
+              },
+            ),
+            ChoiceChip(
+              label: const Text('Circle'),
+              selected: _eyeShape == QrEyeShape.circle,
+              onSelected: (selected) {
+                if (selected) setState(() => _eyeShape = QrEyeShape.circle);
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildTypeSelector() {
-    // This is a placeholder for now. We will expand this in future phases.
+    // This is a placeholder for now. We will expand this in future .
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
