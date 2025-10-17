@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qrx_pro/core/navigation/app_routes.dart';
+import 'package:qrx_pro/features/generator/presentation/screens/generator_screen.dart';
 import 'package:qrx_pro/features/history/presentation/screens/history_screen.dart';
 import 'package:qrx_pro/features/home/presentation/screens/home_screen.dart';
 import 'package:qrx_pro/features/scanner/presentation/screens/result_screen.dart';
@@ -24,7 +25,7 @@ class AppRouter {
           // Home Tab
           GoRoute(
             path: AppRoutes.home,
-            builder: (context, state) => const HomeTab(),
+            builder: (context, state) => const GeneratorScreen(),
           ),
           // Scan Tab
           GoRoute(

@@ -59,19 +59,6 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// --- Placeholder Tabs ---
-
-class HomeTab extends StatelessWidget {
-  const HomeTab({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard')),
-      body: const Center(child: Text('Home Content')),
-    );
-  }
-}
-
 class SettingsTab extends StatelessWidget {
   const SettingsTab({super.key});
   @override
