@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qrx_pro/core/navigation/app_routes.dart';
-import 'package:qrx_pro/features/generator/domain/entities/qr_style_data.dart';
 import 'package:qrx_pro/features/generator/presentation/screens/generator_screen.dart';
 import 'package:qrx_pro/features/generator/presentation/screens/preview_screen.dart';
 import 'package:qrx_pro/features/history/presentation/screens/history_screen.dart';
@@ -58,15 +57,8 @@ class AppRouter {
       GoRoute(
         path: '/generator/preview',
         builder: (context, state) {
-          // Expect a Map now instead of just a String
-          final Map<String, dynamic> extra =
-              state.extra as Map<String, dynamic>? ?? {};
-
-          final String data = extra['data'] as String? ?? 'Error';
-          final QrStyleData style =
-              extra['style'] as QrStyleData? ?? QrStyleData();
-
-          return PreviewScreen(data: data, style: style);
+          final String data = state.extra as String? ?? 'Error';
+          return PreviewScreen(data: data); // Pass only the data
         },
       ),
     ],
