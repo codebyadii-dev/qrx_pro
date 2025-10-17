@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class GeneratorScreen extends StatefulWidget {
@@ -58,10 +59,18 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
         Expanded(
           child: FilledButton.icon(
             onPressed: () {
-              // Logic for Phase 15
-              final text = _textController.text;
+              // ***  LOGIC ***
+              final text = _textController.text.trim();
               if (text.isNotEmpty) {
-                // Future: Navigate to preview screen
+                context.push('/generator/preview', extra: text);
+              } else {
+                // Show a snackbar if the input is empty
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter some text or a URL.'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
               }
             },
             icon: const Icon(LucideIcons.eye),

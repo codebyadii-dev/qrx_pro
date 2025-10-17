@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qrx_pro/core/navigation/app_routes.dart';
 import 'package:qrx_pro/features/generator/presentation/screens/generator_screen.dart';
+import 'package:qrx_pro/features/generator/presentation/screens/preview_screen.dart';
 import 'package:qrx_pro/features/history/presentation/screens/history_screen.dart';
 import 'package:qrx_pro/features/home/presentation/screens/home_screen.dart';
 import 'package:qrx_pro/features/scanner/presentation/screens/result_screen.dart';
@@ -51,6 +52,13 @@ class AppRouter {
           // Pass the scanned data to the screen using 'extra'
           final String qrData = state.extra as String? ?? 'No data found';
           return ResultScreen(qrData: qrData);
+        },
+      ),
+      GoRoute(
+        path: '/generator/preview',
+        builder: (context, state) {
+          final String data = state.extra as String? ?? 'Error';
+          return PreviewScreen(data: data);
         },
       ),
     ],
