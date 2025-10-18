@@ -38,28 +38,27 @@ class _ScannerScreenState extends State<ScannerScreen> {
     }
   }
 
-  void _onDetect(BarcodeCapture capture) {
+  // --- THIS IS THE CORRECTED LOGIC ---
+  Future<void> _onDetect(BarcodeCapture capture) async {
     if (_isProcessing) return;
 
     final String? rawValue = capture.barcodes.first.rawValue;
     if (rawValue != null && rawValue.isNotEmpty) {
       setState(() => _isProcessing = true);
-      _cameraController.stop();
-      context.push('/scan/result', extra: rawValue);
-    }
-  }
+      _cameraController.stop(); // 1. Stop the camera
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final route = ModalRoute.of(context);
-    if (route?.isCurrent ?? false) {
-      if (_isPermissionGranted) {
-        _cameraController.start();
+      // 2. Await the navigation. The code will pause here until you come back.
+      await context.push('/scan/result', extra: rawValue);
+
+      // 3. When you come back, this code runs.
+      if (mounted) {
+        _cameraController.start(); // 4. Restart the camera
         setState(() => _isProcessing = false);
       }
     }
   }
+
+  // --- WE NO LONGER NEED `didChangeDependencies` ---
 
   @override
   void dispose() {

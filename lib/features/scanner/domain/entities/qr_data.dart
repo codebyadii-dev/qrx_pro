@@ -1,13 +1,13 @@
-// The types of QR data we can recognize.
-enum QrDataType { url, text, wifi, vcard, unknown }
+// The types of QR data we can now recognize.
+enum QrDataType { url, text, wifi, vcard, email, phone, sms, geo, unknown }
 
-// A base class for our parsed data.
+// Base class for parsed data (remains the same).
 abstract class ParsedQrData {
   final String rawValue;
   ParsedQrData(this.rawValue);
 }
 
-// Specific data class for WiFi credentials.
+// WiFi data class (remains the same).
 class WifiData extends ParsedQrData {
   final String ssid;
   final String password;
@@ -20,7 +20,7 @@ class WifiData extends ParsedQrData {
   }) : super(rawValue);
 }
 
-// Specific data class for plain text.
+// Generic data class for text and other simple types.
 class TextData extends ParsedQrData {
   TextData(super.rawValue);
 }
@@ -35,6 +35,7 @@ class QrData {
     : type = _parseType(rawValue),
       parsedData = _parseData(rawValue);
 
+  // The parser is now much smarter, thanks to your list!
   static QrDataType _parseType(String value) {
     if (value.startsWith('http://') || value.startsWith('https://')) {
       return QrDataType.url;
@@ -45,6 +46,18 @@ class QrData {
     if (value.startsWith('BEGIN:VCARD')) {
       return QrDataType.vcard;
     }
+    if (value.startsWith('mailto:')) {
+      return QrDataType.email;
+    }
+    if (value.startsWith('tel:')) {
+      return QrDataType.phone;
+    }
+    if (value.startsWith('sms:') || value.startsWith('smsto:')) {
+      return QrDataType.sms;
+    }
+    if (value.startsWith('geo:')) {
+      return QrDataType.geo;
+    }
     return QrDataType.text;
   }
 
@@ -54,20 +67,25 @@ class QrData {
     switch (type) {
       case QrDataType.wifi:
         return _parseWifi(rawValue);
-      // We will add vCard parsing later. For now, it's treated as text.
+      // For now, these will be handled as simple text with special icons/actions.
+      // Full parsers will be added later.
       case QrDataType.vcard:
       case QrDataType.url:
       case QrDataType.text:
+      case QrDataType.email:
+      case QrDataType.phone:
+      case QrDataType.sms:
+      case QrDataType.geo:
       default:
         return TextData(rawValue);
     }
   }
 
-  // A simple parser for WiFi strings.
+  // WiFi parser (remains the same).
   static WifiData _parseWifi(String rawValue) {
     String ssid = '';
     String password = '';
-    String encryption = 'WPA'; // Default
+    String encryption = 'WPA';
 
     final parts = rawValue.substring(5).split(';');
     for (var part in parts) {

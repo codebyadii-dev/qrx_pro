@@ -15,6 +15,7 @@ import 'package:injectable/injectable.dart' as _i526;
 import '../../features/history/data/repositories/history_repository_impl.dart'
     as _i751;
 import '../../features/history/presentation/cubit/history_cubit.dart' as _i232;
+import '../services/ai/ai_helper_service.dart' as _i272;
 import '../services/database/database_service.dart' as _i247;
 import '../services/permissions/permission_service.dart' as _i202;
 import 'register_module.dart' as _i291;
@@ -37,6 +38,7 @@ extension GetItInjectableX on _i174.GetIt {
       preResolve: true,
     );
     gh.lazySingleton<_i202.PermissionService>(() => _i202.PermissionService());
+    gh.lazySingleton<_i272.AiHelperService>(() => _i272.AiHelperService());
     gh.lazySingleton<_i751.IHistoryRepository>(
         () => _i751.HistoryRepositoryImpl(gh<_i247.DatabaseService>()));
     gh.factory<_i232.HistoryCubit>(
