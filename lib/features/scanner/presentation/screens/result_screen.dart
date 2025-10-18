@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:qrx_pro/common/cubit/base_state.dart';
 import 'package:qrx_pro/core/di/service_locator.dart';
 import 'package:qrx_pro/features/history/data/repositories/history_repository_impl.dart';
 import 'package:qrx_pro/features/history/domain/entities/history_item.dart';
 import 'package:qrx_pro/features/scanner/domain/entities/qr_data.dart';
+import 'package:qrx_pro/features/scanner/domain/entities/url_metadata.dart';
+import 'package:qrx_pro/features/scanner/presentation/cubit/url_metadata_cubit.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -21,11 +25,25 @@ class _ResultScreenState extends State<ResultScreen> {
   late QrData _parsedData;
   // Get an instance of the repository from our DI container
   final IHistoryRepository _historyRepository = getIt<IHistoryRepository>();
+  // Get an instance of the cubit
+  late final UrlMetadataCubit _metadataCubit;
 
   @override
   void initState() {
     super.initState();
     _parsedData = QrData(rawValue: widget.qrData);
+    _metadataCubit = getIt<UrlMetadataCubit>();
+
+    // If the scanned data is a URL, start fetching its metadata.
+    if (_parsedData.type == QrDataType.url) {
+      _metadataCubit.fetchMetadata(_parsedData.rawValue);
+    }
+  }
+
+  @override
+  void dispose() {
+    _metadataCubit.close(); // Clean up the cubit
+    super.dispose();
   }
 
   Future<void> _openUrl() async {
@@ -66,17 +84,24 @@ class _ResultScreenState extends State<ResultScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Scan Result')),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildDataCard(),
-            const SizedBox(height: 24),
-            _buildActionButtons(),
-          ],
+    return BlocProvider.value(
+      value: _metadataCubit,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Scan Result')),
+        body: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_parsedData.type == QrDataType.url) ...[
+                _buildAiInsightCard(),
+                const SizedBox(height: 16),
+              ],
+              _buildDataCard(),
+              const SizedBox(height: 24),
+              _buildActionButtons(),
+            ],
+          ),
         ),
       ),
     );
@@ -126,6 +151,102 @@ class _ResultScreenState extends State<ResultScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  // NEW WIDGET to display AI insights
+  Widget _buildAiInsightCard() {
+    return BlocBuilder<UrlMetadataCubit, BaseState<UrlMetadata>>(
+      builder: (context, state) {
+        return state.when(
+          initial: () => const SizedBox.shrink(),
+          loading: () => const Card(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(width: 16),
+                  Text('Analyzing URL...'),
+                ],
+              ),
+            ),
+          ),
+          error: (message) => Card(
+            color: Theme.of(context).colorScheme.errorContainer,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text('Could not analyze URL: $message'),
+            ),
+          ),
+          success: (metadata) {
+            final scoreColor = metadata.safetyScore > 0.9
+                ? Colors.green
+                : metadata.safetyScore > 0.6
+                ? Colors.orange
+                : Colors.red;
+            return Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.grey.shade200,
+                        child: metadata.faviconUrl.isEmpty
+                            ? const Icon(LucideIcons.globe)
+                            : Image.network(
+                                metadata.faviconUrl,
+                                errorBuilder: (_, __, ___) =>
+                                    const Icon(LucideIcons.globe),
+                              ),
+                      ),
+                      title: Text(
+                        metadata.title,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        metadata.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Divider(height: 24),
+                    Text(
+                      'Safety Score',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: LinearProgressIndicator(
+                            value: metadata.safetyScore,
+                            backgroundColor: scoreColor.withOpacity(0.2),
+                            color: scoreColor,
+                            minHeight: 8,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          '${(metadata.safetyScore * 100).toInt()}%',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: scoreColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
