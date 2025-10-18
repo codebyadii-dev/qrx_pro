@@ -76,13 +76,15 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
             ],
           ),
           const SizedBox(height: 24),
-          // Placeholder for QR types
-          const Card(
+
+          Card(
             child: ListTile(
-              leading: Icon(LucideIcons.text),
-              title: Text('More Types'),
-              subtitle: Text('WiFi, Contact, Calendar and more...'),
-              trailing: Icon(LucideIcons.chevronRight),
+              onTap: () =>
+                  context.push('/generator/batch'), // Navigate to batch screen
+              leading: const Icon(LucideIcons.binary),
+              title: const Text('Batch Generate from CSV'),
+              subtitle: const Text('Create multiple QR codes at once'),
+              trailing: const Icon(LucideIcons.chevronRight),
             ),
           ),
         ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qrx_pro/core/navigation/app_routes.dart';
+import 'package:qrx_pro/features/batch/presentation/screens/batch_generator_screen.dart';
 import 'package:qrx_pro/features/generator/presentation/screens/generator_screen.dart';
 import 'package:qrx_pro/features/generator/presentation/screens/preview_screen.dart';
 import 'package:qrx_pro/features/history/presentation/screens/history_screen.dart';
@@ -60,6 +61,10 @@ class AppRouter {
           final String data = state.extra as String? ?? 'Error';
           return PreviewScreen(data: data); // Pass only the data
         },
+      ),
+      GoRoute(
+        path: '/generator/batch',
+        builder: (context, state) => const BatchGeneratorScreen(),
       ),
     ],
   );
