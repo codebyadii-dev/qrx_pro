@@ -19,6 +19,7 @@ import '../../features/scanner/presentation/cubit/url_metadata_cubit.dart'
     as _i1001;
 import '../services/ai/ai_helper_service.dart' as _i272;
 import '../services/database/database_service.dart' as _i247;
+import '../services/device/device_info_service.dart' as _i1054;
 import '../services/permissions/permission_service.dart' as _i202;
 import 'register_module.dart' as _i291;
 
@@ -41,6 +42,8 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i202.PermissionService>(() => _i202.PermissionService());
     gh.lazySingleton<_i272.AiHelperService>(() => _i272.AiHelperService());
+    gh.lazySingleton<_i1054.DeviceInfoService>(
+        () => _i1054.DeviceInfoService());
     gh.lazySingleton<_i751.IHistoryRepository>(
         () => _i751.HistoryRepositoryImpl(gh<_i247.DatabaseService>()));
     gh.factory<_i232.HistoryCubit>(

@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:qrx_pro/core/di/service_locator.dart';
+import 'package:qrx_pro/core/services/device/device_info_service.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class BatchGeneratorScreen extends StatefulWidget {
@@ -18,11 +20,13 @@ class BatchGeneratorScreen extends StatefulWidget {
 }
 
 class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
+  // --- State Variables  ---
   File? _selectedCsvFile;
   String _feedbackMessage = 'No file selected. Please select a CSV file.';
   List<List<dynamic>> _csvData = [];
   bool _isProcessing = false;
 
+  // --- Helper Methods  ---
   void _showSnackbar(String message, {bool isError = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -33,21 +37,20 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
     );
   }
 
+  // --- file picker ---
   Future<void> _pickCsvFile() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['csv'],
     );
-
     if (result != null && result.files.single.path != null) {
       final file = File(result.files.single.path!);
       try {
-        final input = file.openRead();
-        final fields = await input
+        final fields = await file
+            .openRead()
             .transform(utf8.decoder)
             .transform(const CsvToListConverter())
             .toList();
-
         setState(() {
           _selectedCsvFile = file;
           _csvData = fields;
@@ -60,38 +63,47 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
     }
   }
 
+  // ---  BATCH GENERATION LOGIC ---
   Future<void> _generateBatch() async {
     if (_csvData.isEmpty) {
       _showSnackbar('No data to process.', isError: true);
       return;
     }
 
+    // 1. Get our new device info service
+    final deviceInfoService = getIt<DeviceInfoService>();
+    bool permissionGranted = true;
+
+    // 2. Only check for permission on OLD Android versions (SDK < 30)
     if (Platform.isAndroid) {
-      final status = await Permission.storage.request();
-      if (!status.isGranted) {
-        _showSnackbar(
-          'Storage permission is required to save the file.',
-          isError: true,
-        );
-        return;
+      final sdkInt = await deviceInfoService.getAndroidSdkInt();
+      if (sdkInt < 30) {
+        // Android 10 or older
+        final status = await Permission.storage.request();
+        permissionGranted = status.isGranted;
       }
+    }
+
+    if (!permissionGranted) {
+      _showSnackbar(
+        'Storage permission is required to save the file.',
+        isError: true,
+      );
+      return;
     }
 
     setState(() => _isProcessing = true);
 
     try {
       final archive = Archive();
-
       for (int i = 0; i < _csvData.length; i++) {
         final rowData = _csvData[i][0].toString();
         final fileName = 'qr_code_$i.png';
-
         final painter = QrPainter(
           data: rowData,
           version: QrVersions.auto,
           gapless: false,
         );
-
         final picData = await painter.toImageData(250);
         if (picData != null) {
           final bytes = picData.buffer.asUint8List();
@@ -99,28 +111,24 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
         }
       }
 
-      final zipData = ZipEncoder().encode(archive); // This is now non-nullable
-
+      final zipData = ZipEncoder().encode(archive);
       final downloadsDir = await getDownloadsDirectory();
       if (downloadsDir == null) {
         throw Exception('Could not find downloads directory.');
       }
-
       final savePath =
           '${downloadsDir.path}/qrx_pro_batch_${DateTime.now().millisecondsSinceEpoch}.zip';
       final savedFile = File(savePath);
       await savedFile.writeAsBytes(zipData);
-
-      _showSnackbar('Successfully saved to $savePath');
+      _showSnackbar('Successfully saved to Downloads folder');
     } catch (e) {
       _showSnackbar('An error occurred: $e', isError: true);
     } finally {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
+  // --- Build Method  ---
   @override
   Widget build(BuildContext context) {
     return Scaffold(
