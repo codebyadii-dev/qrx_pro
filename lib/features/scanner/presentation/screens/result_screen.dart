@@ -85,19 +85,32 @@ class _ResultScreenState extends State<ResultScreen> {
   Widget _buildDataCard() {
     IconData icon;
     String title;
+    Widget content;
 
     switch (_parsedData.type) {
       case QrDataType.url:
         icon = LucideIcons.link;
         title = 'Website URL';
+        content = _buildContentText(_parsedData.rawValue);
+        break;
+      case QrDataType.wifi:
+        icon = LucideIcons.wifi;
+        title = 'WiFi Network';
+        final wifiData = _parsedData.parsedData as WifiData;
+        content = _buildWifiDetails(wifiData);
+        break;
+      case QrDataType.vcard:
+        icon = LucideIcons.contact;
+        title = 'Contact Card';
+        content = _buildContentText(
+          'vCard data detected. Full support coming soon.',
+        );
         break;
       case QrDataType.text:
+      default:
         icon = LucideIcons.fileText;
         title = 'Plain Text';
-        break;
-      default:
-        icon = LucideIcons.helpCircle;
-        title = 'Unknown Data';
+        content = _buildContentText(_parsedData.rawValue);
     }
 
     return Card(
@@ -108,17 +121,40 @@ class _ResultScreenState extends State<ResultScreen> {
             Icon(icon, size: 48, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 16),
             Text(title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            SelectableText(
-              _parsedData.rawValue,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
+            const SizedBox(height: 12),
+            content,
           ],
         ),
       ),
+    );
+  }
+
+  // NEW helper widget for simple text display
+  Widget _buildContentText(String text) {
+    return SelectableText(
+      text,
+      textAlign: TextAlign.center,
+      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+
+  // NEW helper widget to display formatted WiFi details
+  Widget _buildWifiDetails(WifiData data) {
+    return Column(
+      children: [
+        ListTile(
+          leading: const Icon(LucideIcons.signal),
+          title: const Text('SSID'),
+          subtitle: Text(data.ssid),
+        ),
+        ListTile(
+          leading: const Icon(LucideIcons.lock),
+          title: const Text('Password'),
+          subtitle: Text(data.password.isEmpty ? 'No Password' : data.password),
+        ),
+      ],
     );
   }
 
@@ -128,6 +164,17 @@ class _ResultScreenState extends State<ResultScreen> {
       runSpacing: 12,
       alignment: WrapAlignment.center,
       children: [
+        // conditional button
+        if (_parsedData.type == QrDataType.wifi)
+          FilledButton.icon(
+            onPressed: () {
+              // Future: Implement one-tap WiFi connection
+              _showSnackbar('Auto-connect coming soon!');
+            },
+            icon: const Icon(LucideIcons.wifi),
+            label: const Text('Connect'),
+          ),
+
         if (_parsedData.type == QrDataType.url)
           FilledButton.tonalIcon(
             onPressed: _openUrl,
