@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:qrx_pro/core/di/service_locator.dart';
 import 'package:qrx_pro/core/services/device/device_info_service.dart';
+import 'package:qrx_pro/features/batch/presentation/widgets/progress_dialog.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class BatchGeneratorScreen extends StatefulWidget {
@@ -20,13 +21,10 @@ class BatchGeneratorScreen extends StatefulWidget {
 }
 
 class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
-  // --- State Variables  ---
   File? _selectedCsvFile;
   String _feedbackMessage = 'No file selected. Please select a CSV file.';
   List<List<dynamic>> _csvData = [];
-  bool _isProcessing = false;
 
-  // --- Helper Methods  ---
   void _showSnackbar(String message, {bool isError = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -37,20 +35,21 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
     );
   }
 
-  // --- file picker ---
   Future<void> _pickCsvFile() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['csv'],
     );
+
     if (result != null && result.files.single.path != null) {
       final file = File(result.files.single.path!);
       try {
-        final fields = await file
-            .openRead()
+        final input = file.openRead();
+        final fields = await input
             .transform(utf8.decoder)
             .transform(const CsvToListConverter())
             .toList();
+
         setState(() {
           _selectedCsvFile = file;
           _csvData = fields;
@@ -63,42 +62,49 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
     }
   }
 
-  // ---  BATCH GENERATION LOGIC ---
   Future<void> _generateBatch() async {
     if (_csvData.isEmpty) {
       _showSnackbar('No data to process.', isError: true);
       return;
     }
 
-    // 1. Get our new device info service
     final deviceInfoService = getIt<DeviceInfoService>();
     bool permissionGranted = true;
 
-    // 2. Only check for permission on OLD Android versions (SDK < 30)
     if (Platform.isAndroid) {
       final sdkInt = await deviceInfoService.getAndroidSdkInt();
       if (sdkInt < 30) {
-        // Android 10 or older
         final status = await Permission.storage.request();
         permissionGranted = status.isGranted;
       }
     }
 
+    // We check `mounted` here because there was an `await` for permissions just before.
+    if (!mounted) return;
+
     if (!permissionGranted) {
-      _showSnackbar(
-        'Storage permission is required to save the file.',
-        isError: true,
-      );
+      _showSnackbar('Storage permission is required.', isError: true);
       return;
     }
 
-    setState(() => _isProcessing = true);
+    final progressNotifier = ValueNotifier<int>(0);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => ProgressDialog(
+        progressNotifier: progressNotifier,
+        totalItems: _csvData.length,
+      ),
+    );
 
     try {
       final archive = Archive();
+
       for (int i = 0; i < _csvData.length; i++) {
         final rowData = _csvData[i][0].toString();
         final fileName = 'qr_code_$i.png';
+
         final painter = QrPainter(
           data: rowData,
           version: QrVersions.auto,
@@ -109,6 +115,9 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
           final bytes = picData.buffer.asUint8List();
           archive.addFile(ArchiveFile(fileName, bytes.length, bytes));
         }
+
+        progressNotifier.value = i + 1;
+        await Future.delayed(Duration.zero);
       }
 
       final zipData = ZipEncoder().encode(archive);
@@ -116,19 +125,26 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
       if (downloadsDir == null) {
         throw Exception('Could not find downloads directory.');
       }
+
       final savePath =
           '${downloadsDir.path}/qrx_pro_batch_${DateTime.now().millisecondsSinceEpoch}.zip';
-      final savedFile = File(savePath);
-      await savedFile.writeAsBytes(zipData);
+      await File(savePath).writeAsBytes(zipData);
+
+      // Check `mounted` again after the file-saving `await`.
+      if (!mounted) return;
       _showSnackbar('Successfully saved to Downloads folder');
     } catch (e) {
+      // Also check `mounted` before showing an error snackbar.
+      if (!mounted) return;
       _showSnackbar('An error occurred: $e', isError: true);
     } finally {
-      if (mounted) setState(() => _isProcessing = false);
+      // And finally, check `mounted` before popping the dialog.
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
-  // --- Build Method  ---
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -191,22 +207,9 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
-              onPressed: _selectedCsvFile == null || _isProcessing
-                  ? null
-                  : _generateBatch,
-              icon: _isProcessing
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(LucideIcons.scanLine),
-              label: Text(
-                _isProcessing ? 'Processing...' : 'Generate QR Codes',
-              ),
+              onPressed: _selectedCsvFile == null ? null : _generateBatch,
+              icon: const Icon(LucideIcons.scanLine),
+              label: const Text('Generate QR Codes'),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
