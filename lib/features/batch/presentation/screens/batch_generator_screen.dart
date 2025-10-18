@@ -1,17 +1,18 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:archive/archive_io.dart';
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:qrx_pro/core/di/service_locator.dart';
 import 'package:qrx_pro/core/services/device/device_info_service.dart';
 import 'package:qrx_pro/features/batch/presentation/widgets/progress_dialog.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class BatchGeneratorScreen extends StatefulWidget {
   const BatchGeneratorScreen({super.key});
@@ -70,16 +71,15 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
 
     final deviceInfoService = getIt<DeviceInfoService>();
     bool permissionGranted = true;
-
     if (Platform.isAndroid) {
       final sdkInt = await deviceInfoService.getAndroidSdkInt();
-      if (sdkInt < 30) {
+      if (sdkInt < 33) {
         final status = await Permission.storage.request();
         permissionGranted = status.isGranted;
       }
     }
 
-    // We check `mounted` here because there was an `await` for permissions just before.
+    // FIX #2: Guard against the async gap before using the context.
     if (!mounted) return;
 
     if (!permissionGranted) {
@@ -90,7 +90,7 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
     final progressNotifier = ValueNotifier<int>(0);
 
     showDialog(
-      context: context,
+      context: context, // This is now safe
       barrierDismissible: false,
       builder: (_) => ProgressDialog(
         progressNotifier: progressNotifier,
@@ -109,39 +109,36 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
           data: rowData,
           version: QrVersions.auto,
           gapless: false,
+          emptyColor: Colors.white,
         );
         final picData = await painter.toImageData(250);
         if (picData != null) {
           final bytes = picData.buffer.asUint8List();
           archive.addFile(ArchiveFile(fileName, bytes.length, bytes));
         }
-
         progressNotifier.value = i + 1;
         await Future.delayed(Duration.zero);
       }
 
       final zipData = ZipEncoder().encode(archive);
-      final downloadsDir = await getDownloadsDirectory();
-      if (downloadsDir == null) {
-        throw Exception('Could not find downloads directory.');
-      }
 
-      final savePath =
-          '${downloadsDir.path}/qrx_pro_batch_${DateTime.now().millisecondsSinceEpoch}.zip';
-      await File(savePath).writeAsBytes(zipData);
+      // FIX #1: The `if (zipData == null)` check is removed as it's dead code.
 
-      // Check `mounted` again after the file-saving `await`.
+      final params = SaveFileDialogParams(
+        data: Uint8List.fromList(zipData),
+        fileName: 'qrx_pro_batch_${DateTime.now().millisecondsSinceEpoch}.zip',
+      );
+
+      await FlutterFileDialog.saveFile(params: params);
+
       if (!mounted) return;
-      _showSnackbar('Successfully saved to Downloads folder');
+      _showSnackbar('File saved successfully!');
     } catch (e) {
-      // Also check `mounted` before showing an error snackbar.
       if (!mounted) return;
       _showSnackbar('An error occurred: $e', isError: true);
     } finally {
-      // And finally, check `mounted` before popping the dialog.
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
+      // This check is also crucial and correct.
+      if (mounted) Navigator.of(context).pop();
     }
   }
 
