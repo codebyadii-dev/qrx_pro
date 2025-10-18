@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart'; // Import image_picker
+import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qrx_pro/core/di/service_locator.dart';
@@ -20,6 +20,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   bool _isPermissionGranted = false;
   bool _isProcessing = false;
+  double _zoomScale = 0.0; // State variable for the zoom level
 
   @override
   void initState() {
@@ -56,17 +57,14 @@ class _ScannerScreenState extends State<ScannerScreen> {
     }
   }
 
-  // --- NEW METHOD: Scan from Gallery ---
   Future<void> _scanFromGallery() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile == null || !mounted) return;
 
-    // Show a loading indicator
     setState(() => _isProcessing = true);
 
-    // Analyze the image using the mobile_scanner controller
     final BarcodeCapture? capture = await _cameraController.analyzeImage(
       pickedFile.path,
     );
@@ -75,15 +73,11 @@ class _ScannerScreenState extends State<ScannerScreen> {
         capture.barcodes.isNotEmpty &&
         capture.barcodes.first.rawValue != null) {
       final String rawValue = capture.barcodes.first.rawValue!;
-      // Stop the camera before navigating to prevent conflicts
       _cameraController.stop();
-      // Use push to navigate
       // ignore: use_build_context_synchronously
       await context.push('/scan/result', extra: rawValue);
-      // Restart camera when returning
       if (mounted) _cameraController.start();
     } else {
-      // Show feedback if no QR code is found
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -92,8 +86,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
         );
       }
     }
-
-    // Hide loading indicator
     if (mounted) setState(() => _isProcessing = false);
   }
 
@@ -121,7 +113,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
       appBar: AppBar(
         title: const Text('Scan QR Code'),
         actions: [
-          // --- ADD GALLERY BUTTON ---
           IconButton(
             onPressed: _isProcessing ? null : _scanFromGallery,
             icon: const Icon(LucideIcons.image),
@@ -155,23 +146,39 @@ class _ScannerScreenState extends State<ScannerScreen> {
           if (_isProcessing)
             Container(
               color: Colors.black.withOpacity(0.5),
-              child: const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text(
-                      'Analyzing Image...',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
+              child: const Center(child: CircularProgressIndicator()),
             ),
-          // We keep the overlay painter for the live camera view
           if (!_isProcessing)
             CustomPaint(painter: ScannerOverlayPainter(scanWindow: scanWindow)),
+
+          // --- NEW: ZOOM SLIDER WIDGET ---
+          Positioned(
+            bottom: 30,
+            left: 20,
+            right: 20,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(LucideIcons.zoomOut, color: Colors.white),
+                Expanded(
+                  child: Slider(
+                    value: _zoomScale,
+                    min: 0.0,
+                    max: 1.0,
+                    activeColor: Colors.white,
+                    inactiveColor: Colors.white38,
+                    onChanged: (value) {
+                      setState(() {
+                        _zoomScale = value;
+                        _cameraController.setZoomScale(value);
+                      });
+                    },
+                  ),
+                ),
+                const Icon(LucideIcons.zoomIn, color: Colors.white),
+              ],
+            ),
+          ),
         ],
       ),
     );
