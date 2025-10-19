@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:qrx_pro/core/di/service_locator.dart';
@@ -53,10 +54,12 @@ class _HubCreatorScreenState extends State<HubCreatorScreen> {
       // In the next , we'll navigate to the preview screen.
       // For now, just show a success message.
       if (!mounted) return;
+      context.push('/generator/hub/preview', extra: newHubPage);
+      // Optional: Pop the creator screen so back button on preview goes to main generator
+      // context.pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Hub Page created with ID: ${newHubPage.id}')),
       );
-      Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(

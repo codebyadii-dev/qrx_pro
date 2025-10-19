@@ -6,7 +6,9 @@ import 'package:qrx_pro/features/generator/presentation/screens/generator_screen
 import 'package:qrx_pro/features/generator/presentation/screens/preview_screen.dart';
 import 'package:qrx_pro/features/history/presentation/screens/history_screen.dart';
 import 'package:qrx_pro/features/home/presentation/screens/home_screen.dart';
+import 'package:qrx_pro/features/hub/domain/entities/hub_page.dart';
 import 'package:qrx_pro/features/hub/presentation/screens/hub_creator_screen.dart';
+import 'package:qrx_pro/features/hub/presentation/screens/hub_preview_screen.dart';
 import 'package:qrx_pro/features/scanner/presentation/screens/result_screen.dart';
 import 'package:qrx_pro/features/scanner/presentation/screens/scanner_screen.dart';
 
@@ -70,6 +72,19 @@ class AppRouter {
       GoRoute(
         path: '/generator/hub',
         builder: (context, state) => const HubCreatorScreen(),
+      ),
+      GoRoute(
+        path: '/generator/hub/preview',
+        builder: (context, state) {
+          final hubPage = state.extra as HubPage?;
+          if (hubPage == null) {
+            // Handle error case, maybe navigate back or show an error screen
+            return const Scaffold(
+              body: Center(child: Text('Error: Hub Page not found')),
+            );
+          }
+          return HubPreviewScreen(hubPage: hubPage);
+        },
       ),
     ],
   );
