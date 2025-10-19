@@ -9,7 +9,6 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The SettingsCubit is provided higher up in the tree (in App widget)
     final settingsCubit = context.watch<SettingsCubit>();
     final state = settingsCubit.state;
 
@@ -34,9 +33,7 @@ class SettingsScreen extends StatelessWidget {
                   )
                   .toList(),
               onChanged: (theme) {
-                if (theme != null) {
-                  settingsCubit.changeTheme(theme);
-                }
+                if (theme != null) settingsCubit.changeTheme(theme);
               },
             ),
           ),
@@ -47,14 +44,16 @@ class SettingsScreen extends StatelessWidget {
             title: const Text('Offline Secure Mode'),
             subtitle: const Text('Disable all network calls'),
             value: state.isOfflineMode,
-            onChanged: (isEnabled) =>
-                settingsCubit.toggleOfflineMode(isEnabled),
+            onChanged: settingsCubit.toggleOfflineMode,
           ),
           const Divider(),
           _buildSectionHeader(context, 'Data'),
           ListTile(
-            leading: const Icon(LucideIcons.trash2),
-            title: const Text('Clear Scan History'),
+            leading: const Icon(LucideIcons.trash2, color: Colors.red),
+            title: const Text(
+              'Clear Scan History',
+              style: TextStyle(color: Colors.red),
+            ),
             onTap: () async {
               final confirmed = await _showConfirmationDialog(context);
               if (confirmed ?? false) {
