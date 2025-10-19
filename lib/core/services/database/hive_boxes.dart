@@ -4,4 +4,5 @@ class HiveBoxes {
 
   // Box for storing user settings and preferences.
   static const String settings = 'settings_box';
+  static const String hubPages = 'hub_pages_box';
 }

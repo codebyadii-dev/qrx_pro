@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:qrx_pro/core/di/service_locator.dart';
+import 'package:qrx_pro/features/hub/data/repositories/hub_repository_impl.dart';
 
 class HubCreatorScreen extends StatefulWidget {
   const HubCreatorScreen({super.key});
@@ -16,6 +18,8 @@ class _HubCreatorScreenState extends State<HubCreatorScreen> {
   final _descriptionController = TextEditingController();
   final _linkController = TextEditingController();
   File? _headerImage;
+  final IHubRepository _hubRepository = getIt<IHubRepository>();
+  bool _isProcessing = false;
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -24,6 +28,42 @@ class _HubCreatorScreenState extends State<HubCreatorScreen> {
       setState(() {
         _headerImage = File(pickedFile.path);
       });
+    }
+  }
+
+  Future<void> _createAndPreview() async {
+    // Basic validation
+    if (_titleController.text.isEmpty || _linkController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Title and Primary Link are required.')),
+      );
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+
+    try {
+      final newHubPage = await _hubRepository.saveHubPage(
+        title: _titleController.text,
+        description: _descriptionController.text,
+        primaryLink: _linkController.text,
+        imageFile: _headerImage,
+      );
+
+      // In the next , we'll navigate to the preview screen.
+      // For now, just show a success message.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Hub Page created with ID: ${newHubPage.id}')),
+      );
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error creating page: $e')));
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
@@ -67,14 +107,19 @@ class _HubCreatorScreenState extends State<HubCreatorScreen> {
           ),
           const SizedBox(height: 32),
           FilledButton.icon(
-            onPressed: () {
-              // Logic for Phase 28
-            },
-            icon: const Icon(LucideIcons.eye),
-            label: const Text('Create & Preview'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
+            onPressed: _isProcessing ? null : _createAndPreview,
+            icon: _isProcessing
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Icon(LucideIcons.eye),
+            label: Text(_isProcessing ? 'Creating...' : 'Create & Preview'),
+            // ... (style)
           ),
         ],
       ),

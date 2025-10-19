@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:qrx_pro/core/services/database/hive_boxes.dart';
 import 'package:qrx_pro/features/history/domain/entities/history_item.dart';
+import 'package:qrx_pro/features/hub/domain/entities/hub_page.dart';
 
 @lazySingleton
 @preResolve
@@ -22,9 +23,11 @@ class DatabaseService {
 
     // *** ADD THIS LINE TO REGISTER THE ADAPTER ***
     Hive.registerAdapter(HistoryItemAdapter());
+    Hive.registerAdapter(HubPageAdapter());
 
     // Open Hive boxes
     await Hive.openBox<HistoryItem>(HiveBoxes.history); // Specify the type
+    await Hive.openBox<HubPage>(HiveBoxes.hubPages);
     await Hive.openBox(HiveBoxes.settings);
   }
 
