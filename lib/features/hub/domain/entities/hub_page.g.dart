@@ -22,13 +22,14 @@ class HubPageAdapter extends TypeAdapter<HubPage> {
       primaryLink: fields[3] as String,
       imagePath: fields[4] as String?,
       createdAt: fields[5] as DateTime,
+      scanCount: fields[6] as int,
     )..id = fields[0] as String;
   }
 
   @override
   void write(BinaryWriter writer, HubPage obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -40,7 +41,9 @@ class HubPageAdapter extends TypeAdapter<HubPage> {
       ..writeByte(4)
       ..write(obj.imagePath)
       ..writeByte(5)
-      ..write(obj.createdAt);
+      ..write(obj.createdAt)
+      ..writeByte(6)
+      ..write(obj.scanCount);
   }
 
   @override

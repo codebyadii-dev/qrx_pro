@@ -35,7 +35,7 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create QR Code')),
+      appBar: AppBar(centerTitle: false, title: const Text('Create QR Code')),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [

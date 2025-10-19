@@ -14,6 +14,7 @@ abstract class IHubRepository {
     required String primaryLink,
     File? imageFile,
   });
+  Future<void> incrementScanCount(String hubId);
 }
 
 @LazySingleton(as: IHubRepository)
@@ -51,5 +52,16 @@ class HubRepositoryImpl implements IHubRepository {
 
     await _hubBox.put(newHubPage.id, newHubPage);
     return newHubPage;
+  }
+
+  // --- IncrementScanCount ---
+  @override
+  Future<void> incrementScanCount(String hubId) async {
+    final hubPage = _hubBox.get(hubId);
+    if (hubPage != null) {
+      hubPage.scanCount++;
+      // .put() will update the existing entry
+      await _hubBox.put(hubId, hubPage);
+    }
   }
 }

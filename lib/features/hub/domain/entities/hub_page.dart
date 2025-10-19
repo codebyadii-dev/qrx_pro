@@ -23,12 +23,16 @@ class HubPage extends HiveObject {
   @HiveField(5)
   final DateTime createdAt;
 
+  @HiveField(6)
+  int scanCount;
+
   HubPage({
     required this.title,
     required this.description,
     required this.primaryLink,
     this.imagePath,
     required this.createdAt,
+    this.scanCount = 0,
   }) {
     id = const Uuid().v4(); // Generate a unique ID on creation
   }
