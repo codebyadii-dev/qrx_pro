@@ -11,6 +11,7 @@ import 'package:qrx_pro/features/hub/presentation/screens/hub_creator_screen.dar
 import 'package:qrx_pro/features/hub/presentation/screens/hub_preview_screen.dart';
 import 'package:qrx_pro/features/scanner/presentation/screens/result_screen.dart';
 import 'package:qrx_pro/features/scanner/presentation/screens/scanner_screen.dart';
+import 'package:qrx_pro/features/settings/presentation/screens/settings_screen.dart';
 
 class AppRouter {
   AppRouter._();
@@ -45,7 +46,7 @@ class AppRouter {
           // Settings Tab
           GoRoute(
             path: AppRoutes.settings,
-            builder: (context, state) => const SettingsTab(),
+            builder: (context, state) => const SettingsScreen(),
           ),
         ],
       ),

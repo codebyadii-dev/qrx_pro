@@ -111,6 +111,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: false,
         title: const Text('Scan QR Code'),
         actions: [
           IconButton(

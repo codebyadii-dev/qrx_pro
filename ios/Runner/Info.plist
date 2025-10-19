@@ -4,6 +4,8 @@
 	<dict>
 	    <key>NSCameraUsageDescription</key>
         <string>QRX Pro needs camera access to scan QR codes.</string>
+		<key>NSCameraUsageDescription</key>
+        <string>This app needs camera access to show QR codes in AR.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
         <string>QRX Pro needs access to your photo library to select a logo for the QR code.</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>

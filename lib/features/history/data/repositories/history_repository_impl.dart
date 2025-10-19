@@ -7,6 +7,7 @@ import 'package:qrx_pro/features/history/domain/entities/history_item.dart';
 abstract class IHistoryRepository {
   Future<void> saveHistoryItem(HistoryItem item);
   Future<List<HistoryItem>> getHistoryItems();
+  Future<void> clearHistory();
 }
 
 @LazySingleton(as: IHistoryRepository)
@@ -30,5 +31,10 @@ class HistoryRepositoryImpl implements IHistoryRepository {
     // Hive boxes are like maps, so .values gives an iterable of all items.
     // We reverse it to show the newest items first.
     return _historyBox.values.toList().reversed.toList();
+  }
+
+  @override
+  Future<void> clearHistory() async {
+    await _historyBox.clear(); // This deletes all items in the box
   }
 }

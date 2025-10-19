@@ -18,10 +18,13 @@ import '../../features/history/presentation/cubit/history_cubit.dart' as _i232;
 import '../../features/hub/data/repositories/hub_repository_impl.dart' as _i686;
 import '../../features/scanner/presentation/cubit/url_metadata_cubit.dart'
     as _i1001;
+import '../../features/settings/presentation/cubit/settings_cubit.dart'
+    as _i792;
 import '../services/ai/ai_helper_service.dart' as _i272;
 import '../services/database/database_service.dart' as _i247;
 import '../services/device/device_info_service.dart' as _i1054;
 import '../services/permissions/permission_service.dart' as _i202;
+import '../services/settings/settings_service.dart' as _i522;
 import 'register_module.dart' as _i291;
 
 extension GetItInjectableX on _i174.GetIt {
@@ -42,7 +45,6 @@ extension GetItInjectableX on _i174.GetIt {
       preResolve: true,
     );
     gh.lazySingleton<_i202.PermissionService>(() => _i202.PermissionService());
-    gh.lazySingleton<_i272.AiHelperService>(() => _i272.AiHelperService());
     gh.lazySingleton<_i1054.DeviceInfoService>(
         () => _i1054.DeviceInfoService());
     gh.lazySingleton<_i751.IHistoryRepository>(
@@ -51,8 +53,16 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i232.HistoryCubit(gh<_i751.IHistoryRepository>()));
     gh.lazySingleton<_i686.IHubRepository>(
         () => _i686.HubRepositoryImpl(gh<_i247.DatabaseService>()));
+    gh.lazySingleton<_i522.SettingsService>(
+        () => _i522.SettingsService(gh<_i247.DatabaseService>()));
+    gh.lazySingleton<_i272.AiHelperService>(
+        () => _i272.AiHelperService(gh<_i522.SettingsService>()));
     gh.factory<_i1001.UrlMetadataCubit>(
         () => _i1001.UrlMetadataCubit(gh<_i272.AiHelperService>()));
+    gh.factory<_i792.SettingsCubit>(() => _i792.SettingsCubit(
+          gh<_i522.SettingsService>(),
+          gh<_i751.IHistoryRepository>(),
+        ));
     return this;
   }
 }

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:gal/gal.dart'; // <-- 1. IMPORT the new package
+import 'package:gal/gal.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:path_provider/path_provider.dart';
@@ -151,8 +151,10 @@ class _PreviewScreenState extends State<PreviewScreen> {
           const SizedBox(height: 24),
           _buildStylingOptions(),
           const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Wrap(
+            spacing: 12.0, // Horizontal space between buttons
+            runSpacing: 12.0, // Vertical space if they wrap to the next line
+            alignment: WrapAlignment.center, // Center the buttons
             children: [
               FilledButton.tonalIcon(
                 onPressed: _isProcessing ? null : _saveQrCode,
@@ -165,7 +167,6 @@ class _PreviewScreenState extends State<PreviewScreen> {
                     : const Icon(LucideIcons.download),
                 label: const Text('Save'),
               ),
-              const SizedBox(width: 16),
               FilledButton.tonalIcon(
                 onPressed: _isProcessing ? null : _shareQrCode,
                 icon: const Icon(LucideIcons.share2),
