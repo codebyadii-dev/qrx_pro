@@ -87,6 +87,17 @@ class _GeneratorScreenState extends State<GeneratorScreen> {
               trailing: const Icon(LucideIcons.chevronRight),
             ),
           ),
+          const SizedBox(height: 16),
+          // --- Hub CARD ---
+          Card(
+            child: ListTile(
+              onTap: () => context.push('/generator/hub'),
+              leading: const Icon(LucideIcons.layoutTemplate),
+              title: const Text('Create a Hub Page'),
+              subtitle: const Text('A mini-page for your links'),
+              trailing: const Icon(LucideIcons.chevronRight),
+            ),
+          ),
         ],
       ),
     );

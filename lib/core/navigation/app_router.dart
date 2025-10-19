@@ -6,6 +6,7 @@ import 'package:qrx_pro/features/generator/presentation/screens/generator_screen
 import 'package:qrx_pro/features/generator/presentation/screens/preview_screen.dart';
 import 'package:qrx_pro/features/history/presentation/screens/history_screen.dart';
 import 'package:qrx_pro/features/home/presentation/screens/home_screen.dart';
+import 'package:qrx_pro/features/hub/presentation/screens/hub_creator_screen.dart';
 import 'package:qrx_pro/features/scanner/presentation/screens/result_screen.dart';
 import 'package:qrx_pro/features/scanner/presentation/screens/scanner_screen.dart';
 
@@ -65,6 +66,10 @@ class AppRouter {
       GoRoute(
         path: '/generator/batch',
         builder: (context, state) => const BatchGeneratorScreen(),
+      ),
+      GoRoute(
+        path: '/generator/hub',
+        builder: (context, state) => const HubCreatorScreen(),
       ),
     ],
   );
