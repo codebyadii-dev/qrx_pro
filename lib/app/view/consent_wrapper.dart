@@ -23,6 +23,7 @@ class _ConsentWrapperState extends State<ConsentWrapper> {
   }
 
   void _showConsentDialogIfNeeded() {
+    print("Consent already seen? ${_settingsService.hasSeenConsentDialog()}");
     if (!_settingsService.hasSeenConsentDialog()) {
       showDialog(
         context: context,

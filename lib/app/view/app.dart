@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:qrx_pro/app/view/consent_wrapper.dart';
 import 'package:qrx_pro/core/config/app_theme.dart';
 import 'package:qrx_pro/core/config/app_theme_mode.dart';
 import 'package:qrx_pro/core/di/service_locator.dart';
@@ -18,18 +17,16 @@ class App extends StatelessWidget {
       create: (context) => getIt<SettingsCubit>(),
       child: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, state) {
-          return ConsentWrapper(
-            child: MaterialApp.router(
-              scaffoldMessengerKey: snackbarService.messengerKey,
-              routerConfig: AppRouter.router,
-              debugShowCheckedModeBanner: false,
-              title: 'QRX Pro',
-              theme: AppTheme.lightTheme,
-              darkTheme: state.themeMode == AppThemeMode.amoled
-                  ? AppTheme.amoledTheme
-                  : AppTheme.darkTheme,
-              themeMode: _getThemeMode(state.themeMode),
-            ),
+          return MaterialApp.router(
+            scaffoldMessengerKey: snackbarService.messengerKey,
+            routerConfig: AppRouter.router,
+            debugShowCheckedModeBanner: false,
+            title: 'QRX Pro',
+            theme: AppTheme.lightTheme,
+            darkTheme: state.themeMode == AppThemeMode.amoled
+                ? AppTheme.amoledTheme
+                : AppTheme.darkTheme,
+            themeMode: _getThemeMode(state.themeMode),
           );
         },
       ),

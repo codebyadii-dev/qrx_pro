@@ -21,6 +21,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       create: (context) => getIt<HistoryCubit>()..loadHistory(),
       child: Scaffold(
         appBar: AppBar(
+          centerTitle: false,
           title: const Text('History'),
           actions: [
             IconButton(icon: const Icon(LucideIcons.search), onPressed: () {}),
