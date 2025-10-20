@@ -2,14 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
-	    <key>NSCameraUsageDescription</key>
-        <string>QRX Pro needs camera access to scan QR codes.</string>
 		<key>NSCameraUsageDescription</key>
-        <string>This app needs camera access to show QR codes in AR.</string>
+		<string>QRX Pro needs camera access to scan QR codes.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>This app needs camera access to show QR codes in AR.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-        <string>QRX Pro needs access to your photo library to select a logo for the QR code.</string>
+		<string>QRX Pro needs access to your photo library to select a logo for the QR code.</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>
-        <string>QRX Pro needs to save the generated QR code image to your photo library.</string>
+		<string>QRX Pro needs to save the generated QR code image to your photo library.</string>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
@@ -56,9 +56,9 @@
 		<key>UIStatusBarHidden</key>
 		<false/>
 		<key>LSApplicationQueriesSchemes</key>
-        <array>
-            <string>https</string>
-            <string>http</string>
-        </array>
+		<array>
+			<string>https</string>
+			<string>http</string>
+		</array>
 	</dict>
 </plist>

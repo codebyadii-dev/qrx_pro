@@ -1,16 +1,11 @@
 flutter_native_splash:
-  # The color of the splash screen background.
   color: "#FFFFFF"
-  # The background color for the dark mode splash screen.
   color_dark: "#121212"
 
-  # The image asset for the splash screen. We will add this later.
-  # image: assets/logo.png
-  # image_dark: assets/logo_dark.png
+  # --- ADD/UPDATE THESE LINES ---
+  image: assets/branding/logo.png
 
-  # Branding for Android 12+ splash screens.
   android_12:
     color: "#FFFFFF"
     color_dark: "#121212"
-    # image: assets/logo.png
-    # image_dark: assets/logo_dark.png
+    image: assets/branding/logo.png
