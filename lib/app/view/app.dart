@@ -4,6 +4,7 @@ import 'package:qrx_pro/core/config/app_theme.dart';
 import 'package:qrx_pro/core/config/app_theme_mode.dart';
 import 'package:qrx_pro/core/di/service_locator.dart';
 import 'package:qrx_pro/core/navigation/app_router.dart';
+import 'package:qrx_pro/core/services/snackbar/snackbar_service.dart';
 import 'package:qrx_pro/features/settings/presentation/cubit/settings_cubit.dart';
 
 class App extends StatelessWidget {
@@ -11,11 +12,13 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final snackbarService = getIt<SnackbarService>();
     return BlocProvider(
       create: (context) => getIt<SettingsCubit>(),
       child: BlocBuilder<SettingsCubit, SettingsState>(
         builder: (context, state) {
           return MaterialApp.router(
+            scaffoldMessengerKey: snackbarService.messengerKey,
             routerConfig: AppRouter.router,
             debugShowCheckedModeBanner: false,
             title: 'QRX Pro',

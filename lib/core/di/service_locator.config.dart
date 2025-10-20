@@ -26,6 +26,7 @@ import '../services/device/device_info_service.dart' as _i1054;
 import '../services/export/qr_export_service.dart' as _i549;
 import '../services/permissions/permission_service.dart' as _i202;
 import '../services/settings/settings_service.dart' as _i522;
+import '../services/snackbar/snackbar_service.dart' as _i482;
 import 'register_module.dart' as _i291;
 
 extension GetItInjectableX on _i174.GetIt {
@@ -45,6 +46,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i247.DatabaseService.create(),
       preResolve: true,
     );
+    gh.lazySingleton<_i482.SnackbarService>(() => _i482.SnackbarService());
     gh.lazySingleton<_i202.PermissionService>(() => _i202.PermissionService());
     gh.lazySingleton<_i1054.DeviceInfoService>(
         () => _i1054.DeviceInfoService());

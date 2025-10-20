@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:qrx_pro/features/history/domain/entities/history_item.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -18,7 +19,10 @@ class HistoryListItem extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: ListTile(
-        leading: Icon(iconData, color: Theme.of(context).colorScheme.primary),
+        leading: Hero(
+          tag: 'history_icon_${item.key}',
+          child: Icon(iconData, color: Theme.of(context).colorScheme.primary),
+        ),
         title: Text(
           item.rawValue,
           maxLines: 1,
@@ -30,7 +34,8 @@ class HistoryListItem extends StatelessWidget {
         ),
         trailing: const Icon(LucideIcons.chevronRight),
         onTap: () {
-          // Future: Navigate to a detailed view of the history item
+          // Push the result screen, passing the raw data
+          context.push('/scan/result', extra: item.rawValue);
         },
       ),
     );

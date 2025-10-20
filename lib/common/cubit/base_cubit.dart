@@ -1,11 +1,14 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:qrx_pro/common/cubit/base_state.dart';
+import 'package:qrx_pro/core/di/service_locator.dart';
+import 'package:qrx_pro/core/services/snackbar/snackbar_service.dart';
 
 /// A base Cubit that simplifies state management by providing a standard
 /// set of states (initial, loading, success, error).
 ///
 /// [T] is the type of the data that will be held in the success state.
 class BaseCubit<T> extends Cubit<BaseState<T>> {
+  final SnackbarService _snackbarService = getIt<SnackbarService>();
   BaseCubit() : super(const BaseState.initial());
 
   /// Emits a loading state, then executes the provided [action].
@@ -19,6 +22,8 @@ class BaseCubit<T> extends Cubit<BaseState<T>> {
       emit(BaseState.success(data: data));
     } catch (e) {
       emit(BaseState.error(message: e.toString()));
+      // Automatically show an error snackbar for any failure
+      _snackbarService.showError('An error occurred: $e');
     }
   }
 }

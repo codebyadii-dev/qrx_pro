@@ -7,6 +7,7 @@ import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
+import 'package:lottie/lottie.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:qrx_pro/core/di/service_locator.dart';
 import 'package:qrx_pro/core/services/device/device_info_service.dart';
@@ -61,6 +62,43 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
         _showSnackbar('Error reading CSV file: $e', isError: true);
       }
     }
+  }
+
+  // NEW: A success dialog with a Lottie animation
+  Future<void> _showSuccessDialog() async {
+    if (!mounted) return;
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Lottie.network(
+              'https://assets1.lottiefiles.com/packages/lf20_S1cTTE.json', // A free success animation
+              repeat: false,
+              width: 150,
+              height: 150,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Success!',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Your ZIP file has been saved.',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _generateBatch() async {
@@ -130,15 +168,12 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
       );
 
       await FlutterFileDialog.saveFile(params: params);
-
-      if (!mounted) return;
-      _showSnackbar('File saved successfully!');
     } catch (e) {
       if (!mounted) return;
       _showSnackbar('An error occurred: $e', isError: true);
     } finally {
-      // This check is also crucial and correct.
-      if (mounted) Navigator.of(context).pop();
+      Navigator.of(context).pop(); // This closes the progress dialog
+      await _showSuccessDialog(); // Show the success dialog after
     }
   }
 
