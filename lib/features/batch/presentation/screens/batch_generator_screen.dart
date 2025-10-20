@@ -7,8 +7,8 @@ import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
-import 'package:lottie/lottie.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lottie/lottie.dart'; // Import Lottie
 import 'package:qrx_pro/core/di/service_locator.dart';
 import 'package:qrx_pro/core/services/device/device_info_service.dart';
 import 'package:qrx_pro/features/batch/presentation/widgets/progress_dialog.dart';
@@ -26,6 +26,120 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
   File? _selectedCsvFile;
   String _feedbackMessage = 'No file selected. Please select a CSV file.';
   List<List<dynamic>> _csvData = [];
+
+  // --- FIX #1: Updated Success Dialog ---
+  Future<void> _showSuccessDialog() async {
+    if (!mounted) return;
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Use the local asset, which works offline
+            Lottie.asset(
+              'assets/animations/success.json',
+              repeat: false,
+              width: 150,
+              height: 150,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Success!',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Your ZIP file has been saved.',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _generateBatch() async {
+    if (_csvData.isEmpty) {
+      _showSnackbar('No data to process.', isError: true);
+      return;
+    }
+
+    // ... (Permission logic remains the same)
+    final deviceInfoService = getIt<DeviceInfoService>();
+    bool permissionGranted = true;
+    if (Platform.isAndroid) {
+      final sdkInt = await deviceInfoService.getAndroidSdkInt();
+      if (sdkInt < 33) {
+        final status = await Permission.storage.request();
+        permissionGranted = status.isGranted;
+      }
+    }
+    if (!mounted) return;
+    if (!permissionGranted) {
+      _showSnackbar('Storage permission is required.', isError: true);
+      return;
+    }
+
+    final progressNotifier = ValueNotifier<int>(0);
+    final buildContext = context;
+
+    showDialog(
+      context: buildContext,
+      barrierDismissible: false,
+      builder: (_) => ProgressDialog(
+        progressNotifier: progressNotifier,
+        totalItems: _csvData.length,
+      ),
+    );
+
+    String? savedFilePath; // Variable to track if file was saved
+
+    try {
+      final archive = Archive();
+      for (int i = 0; i < _csvData.length; i++) {
+        final rowData = _csvData[i][0].toString();
+        final fileName = 'qr_code_$i.png';
+        final painter = QrPainter(
+          data: rowData,
+          version: QrVersions.auto,
+          emptyColor: Colors.white,
+        );
+        final picData = await painter.toImageData(250);
+        if (picData != null) {
+          final bytes = picData.buffer.asUint8List();
+          archive.addFile(ArchiveFile(fileName, bytes.length, bytes));
+        }
+        progressNotifier.value = i + 1;
+        await Future.delayed(Duration.zero);
+      }
+
+      final zipData = ZipEncoder().encode(archive);
+
+      final params = SaveFileDialogParams(
+        data: Uint8List.fromList(zipData),
+        fileName: 'qrx_pro_batch_${DateTime.now().millisecondsSinceEpoch}.zip',
+      );
+
+      // --- FIX #2: Check the result of the save dialog ---
+      savedFilePath = await FlutterFileDialog.saveFile(params: params);
+    } catch (e) {
+      if (!mounted) return;
+      _showSnackbar('An error occurred: $e', isError: true);
+    } finally {
+      if (mounted) Navigator.of(buildContext).pop(); // Close progress dialog
+      // Only show success if the file path is not null (meaning user didn't cancel)
+      if (savedFilePath != null) {
+        await _showSuccessDialog();
+      }
+    }
+  }
 
   void _showSnackbar(String message, {bool isError = false}) {
     if (!mounted) return;
@@ -61,119 +175,6 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
       } catch (e) {
         _showSnackbar('Error reading CSV file: $e', isError: true);
       }
-    }
-  }
-
-  // NEW: A success dialog with a Lottie animation
-  Future<void> _showSuccessDialog() async {
-    if (!mounted) return;
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Lottie.network(
-              'https://assets1.lottiefiles.com/packages/lf20_S1cTTE.json', // A free success animation
-              repeat: false,
-              width: 150,
-              height: 150,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Success!',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Your ZIP file has been saved.',
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _generateBatch() async {
-    if (_csvData.isEmpty) {
-      _showSnackbar('No data to process.', isError: true);
-      return;
-    }
-
-    final deviceInfoService = getIt<DeviceInfoService>();
-    bool permissionGranted = true;
-    if (Platform.isAndroid) {
-      final sdkInt = await deviceInfoService.getAndroidSdkInt();
-      if (sdkInt < 33) {
-        final status = await Permission.storage.request();
-        permissionGranted = status.isGranted;
-      }
-    }
-
-    // FIX #2: Guard against the async gap before using the context.
-    if (!mounted) return;
-
-    if (!permissionGranted) {
-      _showSnackbar('Storage permission is required.', isError: true);
-      return;
-    }
-
-    final progressNotifier = ValueNotifier<int>(0);
-
-    showDialog(
-      context: context, // This is now safe
-      barrierDismissible: false,
-      builder: (_) => ProgressDialog(
-        progressNotifier: progressNotifier,
-        totalItems: _csvData.length,
-      ),
-    );
-
-    try {
-      final archive = Archive();
-
-      for (int i = 0; i < _csvData.length; i++) {
-        final rowData = _csvData[i][0].toString();
-        final fileName = 'qr_code_$i.png';
-
-        final painter = QrPainter(
-          data: rowData,
-          version: QrVersions.auto,
-          gapless: false,
-          emptyColor: Colors.white,
-        );
-        final picData = await painter.toImageData(250);
-        if (picData != null) {
-          final bytes = picData.buffer.asUint8List();
-          archive.addFile(ArchiveFile(fileName, bytes.length, bytes));
-        }
-        progressNotifier.value = i + 1;
-        await Future.delayed(Duration.zero);
-      }
-
-      final zipData = ZipEncoder().encode(archive);
-
-      // FIX #1: The `if (zipData == null)` check is removed as it's dead code.
-
-      final params = SaveFileDialogParams(
-        data: Uint8List.fromList(zipData),
-        fileName: 'qrx_pro_batch_${DateTime.now().millisecondsSinceEpoch}.zip',
-      );
-
-      await FlutterFileDialog.saveFile(params: params);
-    } catch (e) {
-      if (!mounted) return;
-      _showSnackbar('An error occurred: $e', isError: true);
-    } finally {
-      Navigator.of(context).pop(); // This closes the progress dialog
-      await _showSuccessDialog(); // Show the success dialog after
     }
   }
 
