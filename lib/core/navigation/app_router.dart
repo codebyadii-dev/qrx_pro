@@ -11,6 +11,7 @@ import 'package:qrx_pro/features/hub/presentation/screens/hub_creator_screen.dar
 import 'package:qrx_pro/features/hub/presentation/screens/hub_preview_screen.dart';
 import 'package:qrx_pro/features/scanner/presentation/screens/result_screen.dart';
 import 'package:qrx_pro/features/scanner/presentation/screens/scanner_screen.dart';
+import 'package:qrx_pro/features/settings/presentation/screens/privacy_policy_screen.dart';
 import 'package:qrx_pro/features/settings/presentation/screens/settings_screen.dart';
 
 class AppRouter {
@@ -86,6 +87,10 @@ class AppRouter {
           }
           return HubPreviewScreen(hubPage: hubPage);
         },
+      ),
+      GoRoute(
+        path: '/settings/privacy',
+        builder: (context, state) => const PrivacyPolicyScreen(),
       ),
     ],
   );

@@ -11,6 +11,7 @@ class SettingsService {
   // Hive keys for settings
   static const String _offlineModeKey = 'offline_mode_enabled';
   static const String _themeModeKey = 'theme_mode';
+  static const String _consentGivenKey = 'analytics_consent_given';
 
   SettingsService(DatabaseService databaseService) {
     _settingsBox = databaseService.getBox(HiveBoxes.settings);
@@ -18,7 +19,6 @@ class SettingsService {
 
   // --- Offline Mode ---
   bool isOfflineModeEnabled() {
-    // Return the saved value, defaulting to `false` if it's not set.
     return _settingsBox.get(_offlineModeKey, defaultValue: false) as bool;
   }
 
@@ -39,5 +39,15 @@ class SettingsService {
 
   Future<void> setThemeMode(AppThemeMode themeMode) async {
     await _settingsBox.put(_themeModeKey, themeMode.name);
+  }
+
+  // --- Analytics Consent ---
+  bool hasSeenConsentDialog() {
+    return _settingsBox.get(_consentGivenKey, defaultValue: false) as bool;
+  }
+
+  // --- THIS IS THE MISSING METHOD ---
+  Future<void> setConsentDialogSeen(bool seen) async {
+    await _settingsBox.put(_consentGivenKey, seen);
   }
 }

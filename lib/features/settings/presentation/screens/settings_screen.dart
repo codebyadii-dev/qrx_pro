@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:qrx_pro/core/config/app_theme_mode.dart';
 import 'package:qrx_pro/features/settings/presentation/cubit/settings_cubit.dart';
@@ -110,6 +111,13 @@ class SettingsScreen extends StatelessWidget {
                 }
               }
             },
+          ),
+          const Divider(),
+          _buildSectionHeader(context, 'About'),
+          ListTile(
+            leading: const Icon(LucideIcons.fileText),
+            title: const Text('Privacy Policy'),
+            onTap: () => context.push('/settings/privacy'),
           ),
         ],
       ),
