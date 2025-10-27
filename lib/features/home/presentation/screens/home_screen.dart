@@ -96,8 +96,14 @@ class _HomeScreenState extends State<HomeScreen> {
         onDestinationSelected: (index) =>
             _onDestinationSelected(index, context),
         destinations: const [
-          NavigationDestination(icon: Icon(LucideIcons.home), label: 'Home'),
-          NavigationDestination(icon: Icon(LucideIcons.qrCode), label: 'Scan'),
+          NavigationDestination(
+            icon: Icon(LucideIcons.qrCode),
+            label: 'Create',
+          ),
+          NavigationDestination(
+            icon: Icon(LucideIcons.scanLine),
+            label: 'Scan',
+          ),
           NavigationDestination(
             icon: Icon(LucideIcons.history),
             label: 'History',

@@ -8,7 +8,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:lottie/lottie.dart'; // Import Lottie
+import 'package:lottie/lottie.dart';
 import 'package:qrx_pro/core/di/service_locator.dart';
 import 'package:qrx_pro/core/services/device/device_info_service.dart';
 import 'package:qrx_pro/features/batch/presentation/widgets/progress_dialog.dart';
@@ -23,11 +23,10 @@ class BatchGeneratorScreen extends StatefulWidget {
 }
 
 class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
-  File? _selectedCsvFile;
+  // --- THIS IS THE FIX: The _selectedCsvFile variable has been removed ---
   String _feedbackMessage = 'No file selected. Please select a CSV file.';
   List<List<dynamic>> _csvData = [];
 
-  // --- FIX #1: Updated Success Dialog ---
   Future<void> _showSuccessDialog() async {
     if (!mounted) return;
     await showDialog(
@@ -36,7 +35,6 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Use the local asset, which works offline
             Lottie.asset(
               'assets/animations/success.json',
               repeat: false,
@@ -71,7 +69,6 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
       return;
     }
 
-    // ... (Permission logic remains the same)
     final deviceInfoService = getIt<DeviceInfoService>();
     bool permissionGranted = true;
     if (Platform.isAndroid) {
@@ -99,18 +96,23 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
       ),
     );
 
-    String? savedFilePath; // Variable to track if file was saved
+    String? savedFilePath;
 
     try {
       final archive = Archive();
       for (int i = 0; i < _csvData.length; i++) {
         final rowData = _csvData[i][0].toString();
         final fileName = 'qr_code_$i.png';
+
         final painter = QrPainter(
           data: rowData,
           version: QrVersions.auto,
+          errorCorrectionLevel: QrErrorCorrectLevel.M,
+          gapless: false,
+          color: Colors.black,
           emptyColor: Colors.white,
         );
+
         final picData = await painter.toImageData(250);
         if (picData != null) {
           final bytes = picData.buffer.asUint8List();
@@ -127,14 +129,12 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
         fileName: 'qrx_pro_batch_${DateTime.now().millisecondsSinceEpoch}.zip',
       );
 
-      // --- FIX #2: Check the result of the save dialog ---
       savedFilePath = await FlutterFileDialog.saveFile(params: params);
     } catch (e) {
       if (!mounted) return;
       _showSnackbar('An error occurred: $e', isError: true);
     } finally {
-      if (mounted) Navigator.of(buildContext).pop(); // Close progress dialog
-      // Only show success if the file path is not null (meaning user didn't cancel)
+      if (mounted) Navigator.of(buildContext).pop();
       if (savedFilePath != null) {
         await _showSuccessDialog();
       }
@@ -167,7 +167,7 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
             .toList();
 
         setState(() {
-          _selectedCsvFile = file;
+          // We no longer set _selectedCsvFile here
           _csvData = fields;
           _feedbackMessage =
               '${fields.length} records found in ${result.files.single.name}';
@@ -196,11 +196,12 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
                   child: Column(
                     children: [
                       Icon(
-                        _selectedCsvFile == null
+                        // The UI now depends only on whether _csvData is empty
+                        _csvData.isEmpty
                             ? LucideIcons.fileUp
                             : LucideIcons.fileCheck2,
                         size: 50,
-                        color: _selectedCsvFile == null
+                        color: _csvData.isEmpty
                             ? Colors.grey
                             : Theme.of(context).colorScheme.primary,
                       ),
@@ -240,7 +241,8 @@ class _BatchGeneratorScreenState extends State<BatchGeneratorScreen> {
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
-              onPressed: _selectedCsvFile == null ? null : _generateBatch,
+              // The button's state also depends only on _csvData
+              onPressed: _csvData.isEmpty ? null : _generateBatch,
               icon: const Icon(LucideIcons.scanLine),
               label: const Text('Generate QR Codes'),
               style: FilledButton.styleFrom(

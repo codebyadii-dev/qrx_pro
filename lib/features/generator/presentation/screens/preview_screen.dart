@@ -27,22 +27,18 @@ class _PreviewScreenState extends State<PreviewScreen> {
   final _screenshotController = ScreenshotController();
   final _exportService = getIt<QrExportService>();
 
-  // Styling state
   Color _foregroundColor = Colors.black;
   Color _backgroundColor = Colors.white;
   QrEyeShape _eyeShape = QrEyeShape.square;
   File? _logoImage;
-
-  // --- FIX #1: Separate state variables for each button ---
   bool _isSavingPng = false;
   bool _isSharing = false;
   bool _isExportingPdf = false;
 
-  // Helper to check if any process is running
   bool get isProcessing => _isSavingPng || _isSharing || _isExportingPdf;
 
   Future<void> _exportQrAsPdf() async {
-    setState(() => _isExportingPdf = true); // Use specific state
+    setState(() => _isExportingPdf = true);
     try {
       ui.Image? embeddedImage;
       if (_logoImage != null) {
@@ -55,6 +51,11 @@ class _PreviewScreenState extends State<PreviewScreen> {
       final painter = QrPainter(
         data: widget.data,
         version: QrVersions.auto,
+
+        // Use High error correction when a logo is present
+        errorCorrectionLevel: _logoImage != null
+            ? QrErrorCorrectLevel.H
+            : QrErrorCorrectLevel.M,
         gapless: false,
         emptyColor: _backgroundColor,
         eyeStyle: QrEyeStyle(eyeShape: _eyeShape, color: _foregroundColor),
@@ -75,11 +76,11 @@ class _PreviewScreenState extends State<PreviewScreen> {
 
       if (mounted) _showSnackbar('PDF saved successfully!');
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         _showSnackbar('An error occurred during PDF export: $e', isError: true);
+      }
     } finally {
-      if (mounted)
-        setState(() => _isExportingPdf = false); // Use specific state
+      if (mounted) setState(() => _isExportingPdf = false);
     }
   }
 
@@ -146,10 +147,11 @@ class _PreviewScreenState extends State<PreviewScreen> {
             child: const Text('Done'),
             onPressed: () {
               setState(() {
-                if (isForeground)
+                if (isForeground) {
                   _foregroundColor = currentColor;
-                else
+                } else {
                   _backgroundColor = currentColor;
+                }
               });
               Navigator.of(context).pop();
             },
@@ -179,6 +181,9 @@ class _PreviewScreenState extends State<PreviewScreen> {
                 child: QrImageView(
                   data: widget.data,
                   version: QrVersions.auto,
+                  errorCorrectionLevel: _logoImage != null
+                      ? QrErrorCorrectLevel.H
+                      : QrErrorCorrectLevel.M,
                   size: 250.0,
                   eyeStyle: QrEyeStyle(
                     eyeShape: _eyeShape,
